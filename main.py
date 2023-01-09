@@ -30,45 +30,32 @@ for i in range(0, 741, 20):
         src = req.content
 
         soup = BeautifulSoup(src, 'lxml')
+        
+        username = soup.find(class_='bt-biografie-name').find('h3').text
+        username = username.strip()
+        job = soup.find(class_='bt-biografie-beruf').find('p').text
 
-        try:
-            username = soup.find(class_='bt-biografie-name').find('h3').text
-            username = username.strip()
-        except Exception:
-            print('имя пользователя не найдено')    
-            username = 'Не найдено'
-
-        try:    
-            job = soup.find(class_='bt-biografie-beruf').find('p').text
-        except Exception:
-            print('Компания не найдена')
-            job = 'Не найдено.'
+        contacts_ul = soup.find('ul', {'class': 'bt-linkliste'}).find_all('li')
+        contacts_dict = {}
+        for contact in contacts_ul:
+            contact_title = contact.find('a').get('title')
+            contact_href = contact.find('a').get('href')
+            contacts_dict[contact_title] = contact_href
 
         data_dict[username] = {'Должность': job, 'Контакты': {}}
 
-        try:
-            contacts_ul = soup.find('ul', {'class': 'bt-linkliste'}).find_all('li')
-            contacts_dict = {}
-
-            for contact in contacts_ul:
-                contact_title = contact.find('a').get('title')
-                contact_href = contact.find('a').get('href')
-                contacts_dict[contact_title] = contact_href
-
-            for title, href in contacts_dict.items():
-                data_dict[username]['Контакты'][title] = href
-
-        except Exception:
-            print('Контакты не найдены')
-            data_dict[username]['Контакты']['название не найдено'] = ['ссылка не найдена']
+        for title, href in contacts_dict.items():
+            data_dict[username]['Контакты'][title] = href
 
         count += 1
         print(f'#{count} Пользователь {username} добавлен!')
 
-print('ВСЕ ПОЛЬЗОВАТЕЛИ ДОБАВЛЕНЫ!')
+    break
+
+print('ВСЕ ПОЛЬЗОВАТЕЛИ ДОБАВЛЕНЫ.')
 
 # сохранение в json
-with open('data.json', 'w', encoding='utf-8') as file:
+with open('data.json', 'a', encoding='utf-8') as file:
     json.dump(data_dict, file, ensure_ascii=False, indent=4)
 
-print('Файл data.json сохранен.')
+print('Файл сохранен.')
